@@ -3,6 +3,7 @@ import { Text, View, StyleSheet,Button,AsyncStorage } from 'react-native';
 import { Constants,Expo,Facebook } from 'expo';
 import { createStackNavigator, createSwitchNavigator, createAppContainer } from 'react-navigation';
 
+
 export default class HomeTemp extends React.Component {
  
   render() {
@@ -18,7 +19,7 @@ export default class HomeTemp extends React.Component {
         title="I am waiting for tokens"
         color="orange"
         onPress={() => console.log('I am waiting for tokens')}
-        />
+    />
     </View>);
   }
 

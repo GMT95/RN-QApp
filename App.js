@@ -4,6 +4,7 @@ import { Constants,Facebook } from 'expo';
 import { createStackNavigator, createSwitchNavigator, createAppContainer } from 'react-navigation';
 import HomeTemp from './screens/HomeTemp';
 import AddCompany from './screens/AddCompany';
+import FormModal from './screens/FormModal'
 import firebase from './config/firebase';
 import _ from 'lodash';
 
@@ -52,38 +53,72 @@ if (Platform.OS === 'android') {
 }
 
 class SignInScreen  extends React.Component {
+  // async logIn() {
+  //   try {
+  //     const {
+  //       type,
+  //       token,
+  //      } = await Facebook.logInWithReadPermissionsAsync('277830099567519', {
+  //       permissions: ['public_profile'],
+  //     });
+  //     if (type === 'success') {
+  //       fetch(`https://graph.facebook.com/me?access_token=${token}`)
+  //       .then((res) => res.json())
+  //       .then((tokenKey) => {
+  //         firebase.database().ref(`users/${tokenKey.id}/`)
+  //         .set(tokenKey)
+  //         return tokenKey
+  //       })
+  //       .then((asyncStoreToken) => {
+  //         AsyncStorage.setItem('userToken',JSON.stringify(asyncStoreToken))
+  //         .then(() => this.props.navigation.navigate('App'))
+  //       })
+  //       .catch(error => {
+  //         console.log(error);
+  //       });
+        
+
+  //       } else {
+  //       // type === 'cancel'
+  //     }
+  //   } catch ({ message }) {
+  //     alert(`Facebook Login Error: ${message}`);
+  //   }
+  // }
+
   async logIn() {
-    try {
-      const {
-        type,
-        token,
-       } = await Facebook.logInWithReadPermissionsAsync('277830099567519', {
-        permissions: ['public_profile'],
-      });
-      if (type === 'success') {
-        fetch(`https://graph.facebook.com/me?access_token=${token}`)
-        .then((res) => res.json())
-        .then((tokenKey) => {
-          firebase.database().ref(`users/${tokenKey.id}/`)
-          .set(tokenKey)
-          return tokenKey
-        })
-        .then((asyncStoreToken) => {
-          AsyncStorage.setItem('userToken',JSON.stringify(asyncStoreToken))
-          .then(() => this.props.navigation.navigate('App'))
+    const { type, token } = await Facebook.logInWithReadPermissionsAsync(
+      "277830099567519",
+      {
+        permissions: ["public_profile", "email"]
+      }
+    );
+
+    if (type === "success") {
+      const credential = firebase.auth.FacebookAuthProvider.credential(token);
+
+      firebase
+        .auth()
+        .signInAndRetrieveDataWithCredential(credential)
+        .then(userCredential => {
+          // console.log(userCredential.user, "*****userCredential*****");
+          firebase
+            .database()
+            .ref(`/users/${userCredential.user.uid}/`)
+            .set({providerData: userCredential.user.providerData[0], uid: userCredential.user.uid})
+            .then(() => {
+              this.props.navigation.navigate('App');
+            })
+            .catch((err) => alert(err))
         })
         .catch(error => {
           console.log(error);
         });
-        
-
-        } else {
-        // type === 'cancel'
-      }
-    } catch ({ message }) {
-      alert(`Facebook Login Error: ${message}`);
+    } else {
+      console.log("type === cancel");
+      // type === 'cancel'
     }
-  }
+}
   
   
   render() {
@@ -96,17 +131,12 @@ class SignInScreen  extends React.Component {
         title="Login with Facebook"
         onPress={() => this.logIn()}
         />
-      <Button
-        title="color"
-        color="black"
-        onPress={() => console.log('sdsd')}
-        />
       </View>
     );
   }
 }
 
-const AppStack = createStackNavigator({ Home: HomeTemp, AddCompany: AddCompany});
+const AppStack = createStackNavigator({ Home: HomeTemp, AddCompany: AddCompany, FormModal: FormModal});
 const AuthStack = createStackNavigator({ SignIn: SignInScreen });
 
 
